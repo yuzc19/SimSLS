@@ -1,0 +1,3 @@
+export CUDA_VISIBLE_DEVICES=3
+
+CUDA_LAUNCH_BLOCKING=1 python evaluation.py
