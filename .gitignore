@@ -1,2 +1,5 @@
 train/*
 test/*
+data/*
+result/*
+*/__pycache__/*

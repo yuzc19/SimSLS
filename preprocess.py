@@ -1,6 +1,7 @@
 import json
 import os
 from tqdm import tqdm
+import random
 
 with open("train/query.json", "r") as f:
     query = [json.loads(l) for l in f]
@@ -8,6 +9,8 @@ with open("train/query.json", "r") as f:
 with open("train/label_top30_dict.json", "r") as f:
     label_top30_dict = json.load(f)
 
+dataset = []
+train_dataset, eval_dataset = [], []
 i = 0
 for qid, candidates in tqdm(label_top30_dict.items()):
     for j, q in enumerate(query):
@@ -47,7 +50,16 @@ for qid, candidates in tqdm(label_top30_dict.items()):
             else:
                 label = candidates[str(cid)]
             processed_data["processed_candidates"].append(
-                [str(cid), label, candidate_text]
+                [str(cid), str(label), candidate_text]
             )
     with open(candidates_dir + "processed.json", "w", encoding="utf-8") as f:
-        f.writelines(json.dumps(processed_data, ensure_ascii=False))
+        dataset.append(json.dumps(processed_data, ensure_ascii=False) + "\n")
+        # f.write(json.dumps(processed_data, ensure_ascii=False))
+
+random.shuffle(dataset)
+train_dataset = dataset[:-10]
+with open("train/train.json", "w") as f:
+    f.writelines(train_dataset)
+eval_dataset = dataset[-10:]
+with open("train/eval.json", "w") as f:
+    f.writelines(eval_dataset)
