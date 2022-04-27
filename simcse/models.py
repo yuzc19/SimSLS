@@ -33,8 +33,12 @@ def cl_init(cls, config):
     """
     Contrastive learning class init function.
     """
-    cls.pooler_type = cls.model_args.pooler_type
-    cls.sim = Similarity(temp=cls.model_args.temp)
+    if cls.model_args != None:
+        cls.pooler_type = cls.model_args.pooler_type
+        cls.sim = Similarity(temp=cls.model_args.temp)
+    else:
+        cls.pooler_type = "cls"
+        cls.sim = Similarity(temp=0.1)
     # cls.init_weights()
 
 
@@ -102,7 +106,7 @@ def cl_forward(
 
     loss_fct = nn.LogSoftmax(dim=-1)
     loss = -loss_fct(cos_sim)[0][0]
-    print(loss)
+    # print(loss)
 
     if not return_dict:
         output = (cos_sim,) + outputs[2:]
@@ -162,7 +166,9 @@ class RobertaForCL(RobertaPreTrainedModel):
 
     def __init__(self, config, *model_args, **model_kargs):
         super().__init__(config)
-        self.model_args = model_kargs["model_args"]
+        self.model_args = (
+            model_kargs["model_args"] if "model_args" in model_kargs else None
+        )
         self.roberta = RobertaModel(config, add_pooling_layer=False)
 
         cl_init(self, config)
@@ -222,7 +228,9 @@ class LawformerForCL(LongformerPreTrainedModel):
 
     def __init__(self, config, *model_args, **model_kargs):
         super().__init__(config)
-        self.model_args = model_kargs["model_args"]
+        self.model_args = (
+            model_kargs["model_args"] if "model_args" in model_kargs else None
+        )
         self.lawformer = AutoModel.from_pretrained("thunlp/Lawformer")
 
         cl_init(self, config)
