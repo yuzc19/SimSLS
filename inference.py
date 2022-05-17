@@ -1,46 +1,20 @@
-# zero-shot: 0.6135746125773133
-
 from transformers import AutoTokenizer, AutoModel
 from simcse.models import LawformerForCL
 import torch
 import json
-from tqdm import tqdm
 from scipy.spatial.distance import cosine
 from sklearn.metrics import ndcg_score
+import os
 import numpy as np
 
+do_eval = True
+
 tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext")
-# model = AutoModel.from_pretrained("thunlp/Lawformer").cuda()
-model = LawformerForCL.from_pretrained("result/lawformer-1-5e-5-0.1").cuda()
-
-
-# def get_embedding(text: str):
-#     inputs = tokenizer(
-#         text, return_tensors="pt"
-#     )  # The tokenizer automatically adds [CLS] (101) at the beginning.
-#     for k in inputs:
-#         inputs[k] = inputs[k].cuda()
-#     outputs = model(**inputs)
-#     return outputs.pooler_output[0].cpu().detach().numpy()  # 768
-#     # return outputs.pooler_output  # After training.
-
-
-# with open("train/eval.json", "r") as f:
-#     eval_dataset = [json.loads(i) for i in f.readlines()]
-# data = eval_dataset[0]
-# query_embedding = get_embedding(data["query_text"])
-# y_true, y_score = [], []
-# for _, label, candidate_text in tqdm(data["processed_candidates"]):
-#     y_true.append(int(label))
-#     if len(candidate_text) > 3072:
-#         candidate_text = candidate_text[:3072]
-#     candidate_embedding = get_embedding(candidate_text)
-#     similarity = 1 - cosine(query_embedding, candidate_embedding)
-#     y_score.append(similarity)
-
-# print(
-#     ndcg_score([y_true], [y_score], k=30)
-# )  # Best y_true (sorted by y_true) and y_true (sorted by y_score)
+# model = AutoModel.from_pretrained(
+#     "thunlp/Lawformer"
+# ).cuda()  # zero-shot: 0.6135746125773133
+model_name_or_path = "result/lawformer-1-1e-5-0.1"
+model = LawformerForCL.from_pretrained(model_name_or_path).cuda()
 
 
 def batcher(sentences):
@@ -50,7 +24,7 @@ def batcher(sentences):
         max_length=3072,
         truncation=True,
         padding=True,
-    )
+    )  # The tokenizer automatically adds [CLS] (101) at the beginning.
     for k in batch:
         batch[k] = batch[k].cuda()
     with torch.no_grad():
@@ -63,9 +37,17 @@ def batcher(sentences):
 
 model.eval()
 
-with open("train/eval.json", "r") as f:
-    eval_dataset = [json.loads(i) for i in f.readlines()]
-ndcg_scores = []
+if do_eval:
+    with open("train/eval.json", "r") as f:
+        eval_dataset = [json.loads(i) for i in f.readlines()]
+else:
+    with open("test/test.json", "r") as f:
+        eval_dataset = [json.loads(i) for i in f.readlines()]
+if do_eval:
+    y_scores = []
+    ndcg_scores = []
+else:
+    prediction = {}
 for example in eval_dataset:
     texts = [example["query_text"]] + [i[2] for i in example["processed_candidates"]]
     pooler_output = None
@@ -82,12 +64,29 @@ for example in eval_dataset:
             )
         )
     query_embedding = pooler_output[0].numpy()
-    y_true, y_score = [int(i[1]) for i in example["processed_candidates"]], []
+    if do_eval:
+        y_true, y_score = [int(i[1]) for i in example["processed_candidates"]], []
+    else:
+        y_score = []
     candidate_len = len(example["processed_candidates"])
     for i in range(1, candidate_len + 1):
         candidate_embedding = pooler_output[i].numpy()
         similarity = 1 - cosine(query_embedding, candidate_embedding)
-        y_score.append(similarity)
-    ndcg_scores.append(ndcg_score([y_true], [y_score], k=30))
+        if do_eval:
+            y_score.append(similarity)
+        else:
+            y_score.append([example["processed_candidates"][i - 1][0], similarity])
+    if do_eval:
+        y_scores.append(y_score)
+        ndcg_scores.append(ndcg_score([y_true], [y_score], k=30))
+    else:
+        y_score.sort(key=lambda x: x[1], reverse=True)
+        prediction[example["qid"]] = [y_score[i][0] for i in range(30)]
 
-print(np.mean(ndcg_scores))
+if do_eval:
+    json.dump(y_scores, open(os.path.join(model_name_or_path, "scores.json"), "w"))
+
+    print(f"eval_ndcg: {np.mean(ndcg_scores)}")
+else:
+    with open(model_name_or_path + "/prediction.json", "w") as f:
+        f.write(json.dumps(prediction))
