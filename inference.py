@@ -4,10 +4,11 @@ import torch
 import json
 from scipy.spatial.distance import cosine
 from sklearn.metrics import ndcg_score
+from copy import deepcopy
 import os
 import numpy as np
 
-do_eval = True
+do_eval = False
 
 tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext")
 # model = AutoModel.from_pretrained(
@@ -43,8 +44,8 @@ if do_eval:
 else:
     with open("test/test.json", "r") as f:
         eval_dataset = [json.loads(i) for i in f.readlines()]
+y_scores = []
 if do_eval:
-    y_scores = []
     ndcg_scores = []
 else:
     prediction = {}
@@ -80,13 +81,16 @@ for example in eval_dataset:
         y_scores.append(y_score)
         ndcg_scores.append(ndcg_score([y_true], [y_score], k=30))
     else:
+        y_scores.append([x[1] for x in y_score])
         y_score.sort(key=lambda x: x[1], reverse=True)
         prediction[example["qid"]] = [y_score[i][0] for i in range(30)]
 
 if do_eval:
-    json.dump(y_scores, open(os.path.join(model_name_or_path, "scores.json"), "w"))
+    json.dump(y_scores, open(os.path.join(model_name_or_path, "eval_scores.json"), "w"))
 
     print(f"eval_ndcg: {np.mean(ndcg_scores)}")
 else:
-    with open(model_name_or_path + "/prediction.json", "w") as f:
-        f.write(json.dumps(prediction))
+    json.dump(y_scores, open(os.path.join(model_name_or_path, "scores.json"), "w"))
+
+    # with open(model_name_or_path + "/prediction.json", "w") as f:
+    #     f.write(json.dumps(prediction))

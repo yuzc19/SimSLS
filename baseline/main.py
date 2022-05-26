@@ -8,6 +8,8 @@ import numpy as np
 from sklearn.metrics import ndcg_score
 from sklearn import preprocessing
 
+do_eval = False
+
 parser = argparse.ArgumentParser(description="Help info.")
 parser.add_argument(
     "--input", type=str, default="train", help="input path of the dataset directory."
@@ -18,7 +20,11 @@ parser.add_argument(
 
 args = parser.parse_args()
 input_path = args.input
-input_query_path = os.path.join(input_path, "eval.json")
+if do_eval:
+    input_query_path = os.path.join(input_path, "eval.json")
+else:
+    input_path = "test"
+    input_query_path = os.path.join(input_path, "test.json")
 input_candidate_path = os.path.join(input_path, "candidates")
 output_path = args.output
 
@@ -44,8 +50,9 @@ if __name__ == "__main__":
     stopwords.extend([".", "（", "）", "-"])
 
     lines = open(input_query_path, "r").readlines()
-    # y_scores = []
-    ndcg_scores = []
+    y_scores = []
+    if do_eval:
+        ndcg_scores = []
     for line in lines:
         corpus = []
         query = str(eval(line)["qid"])
@@ -66,23 +73,38 @@ if __name__ == "__main__":
         a = jieba.cut(eval(line)["query_text"], cut_all=False)
         tem = " ".join(a).split()
         q = [i for i in tem if not i in stopwords]
-        y_true, y_score = [
-            int(i[1]) for i in eval(line)["processed_candidates"]
-        ], normalize(bm25Model.get_scores(q))
-        # y_scores.append(y_score)
-        ndcg_scores.append(ndcg_score([y_true], [y_score], k=30))
+        if do_eval:
+            y_true, y_score = [
+                int(i[1]) for i in eval(line)["processed_candidates"]
+            ], normalize(bm25Model.get_scores(q))
+            ndcg_scores.append(ndcg_score([y_true], [y_score], k=30))
+        else:
+            y_score = normalize(bm25Model.get_scores(q))
+        y_scores.append(y_score)
         raw_rank_index = np.array(y_score).argsort().tolist()[::-1]
         result[query] = [int(files[i].split(".")[0]) for i in raw_rank_index]
+    if do_eval:
+        json.dump(y_scores, open(os.path.join(output_path, "eval_scores.json"), "w"))
+    else:
+        json.dump(y_scores, open(os.path.join(output_path, "scores.json"), "w"))
 
-    # json.dump(y_scores, open(os.path.join(output_path, "scores.json"), "w"))
-
-    json.dump(
-        result,
-        open(os.path.join(output_path, "prediction.json"), "w", encoding="utf8"),
-        indent=2,
-        ensure_ascii=False,
-        sort_keys=True,
-    )
+    if do_eval:
+        json.dump(
+            result,
+            open(
+                os.path.join(output_path, "eval_prediction.json"), "w", encoding="utf8"
+            ),
+            indent=2,
+            ensure_ascii=False,
+        )
+    else:
+        json.dump(
+            result,
+            open(os.path.join(output_path, "prediction.json"), "w", encoding="utf8"),
+            indent=2,
+            ensure_ascii=False,
+        )
     print("ouput done.")
 
-    print(f"eval_ndcg: {np.mean(ndcg_scores)}")
+    if do_eval:
+        print(f"eval_ndcg: {np.mean(ndcg_scores)}")
