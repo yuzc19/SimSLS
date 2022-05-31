@@ -3,14 +3,14 @@ import numpy as np
 from sklearn.metrics import ndcg_score
 import os
 
-do_eval = True
+do_eval = False
 
 index = 1
 
 model_name_or_paths = ["result/lawformer-1-1e-5-0.1", "result/lawformer-8-1e-5-0.1"]
 model_name_or_path = model_name_or_paths[index]
 
-BM25_ratios = [0.061, 0.319]
+BM25_ratios = [0.061, 0.319]  # 0.219 for new
 BM25_ratio = BM25_ratios[index]
 
 if do_eval:
