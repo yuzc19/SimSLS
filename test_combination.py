@@ -5,12 +5,16 @@ import os
 
 do_eval = False
 
-index = 1
+index = 2
 
-model_name_or_paths = ["result/lawformer-1-1e-5-0.1", "result/lawformer-8-1e-5-0.1"]
+model_name_or_paths = [
+    "result/lawformer-1-1e-5-0.1",
+    "result/lawformer-8-1e-5-0.1",
+    "result/lawformer",
+]
 model_name_or_path = model_name_or_paths[index]
 
-BM25_ratios = [0.061, 0.319]  # 0.219 for new
+BM25_ratios = [0.083, 0.314, 0.393]
 BM25_ratio = BM25_ratios[index]
 
 if do_eval:

@@ -8,7 +8,7 @@ from copy import deepcopy
 import os
 import numpy as np
 
-do_eval = False
+do_eval = True
 
 tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext")
 # model = AutoModel.from_pretrained(

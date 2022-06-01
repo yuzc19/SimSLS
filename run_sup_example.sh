@@ -34,7 +34,7 @@ python train.py \
     --eval_steps 10 \
     --pooler_type cls \
     --overwrite_output_dir \
-    --temp 0.1 \
+    --temp 0.15 \
     --do_train \
     --do_eval \
     --fp16 \
