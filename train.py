@@ -305,7 +305,7 @@ def main():
     #     level=logging.INFO
     #     if is_main_process(training_args.local_rank)
     #     else logging.WARN,
-    # )  # TODO: Enable logging
+    # )
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -434,6 +434,8 @@ def main():
         #   the max sentence length in the batch, otherwise use the
         #   max sentence length in the argument and truncate those that
         #   exceed the max length.
+        num_sent = 8
+
         sentences = []
         total = len(examples[sent0_cname])
         for i in range(total):
@@ -449,9 +451,9 @@ def main():
             for candidate in related_candidates:
                 sentences.append(examples[sent1_cname][i])
                 sentences.append(candidate)
-                for k in range(6):
+                for k in range(num_sent - 2):
                     sentences.append(unrelated_candidates[(j + k) % candidate_len])
-                j = (j + 6) % candidate_len
+                j = (j + num_sent - 2) % candidate_len
 
         sent_features = tokenizer(
             sentences,
@@ -460,29 +462,29 @@ def main():
             padding="max_length" if data_args.pad_to_max_length else False,
         )
 
-        # TODO: Add num_sent
         features = {}
         total = len(sentences)
         print(total)
         for key in sent_features:
             features[key] = [
-                [sent_features[key][i + j] for j in range(8)]
-                for i in range(0, total, 8)
+                [sent_features[key][i + j] for j in range(num_sent)]
+                for i in range(0, total, num_sent)
             ]
 
         return features
 
     if training_args.do_train:
-        # TODO: Polish code at first time
-        train_dataset = Dataset.load_from_disk("./data/train_dataset")
-        # train_dataset = datasets["train"].map(
-        #     prepare_features,
-        #     batched=True,
-        #     num_proc=data_args.preprocessing_num_workers,
-        #     remove_columns=column_names,
-        #     load_from_cache_file=not data_args.overwrite_cache,
-        # )  # Check first two
-        # train_dataset.save_to_disk("./data/train_dataset")
+        if os.path.exists("./data/train_dataset"):
+            train_dataset = Dataset.load_from_disk("./data/train_dataset")
+        else:
+            train_dataset = datasets["train"].map(
+                prepare_features,
+                batched=True,
+                num_proc=data_args.preprocessing_num_workers,
+                remove_columns=column_names,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )  # Check first two
+            train_dataset.save_to_disk("./data/train_dataset")
 
     # Data collator
     @dataclass
@@ -507,7 +509,7 @@ def main():
                 "mlm_labels",
             ]
             bs = len(features)  # 1
-            num_sent = len(features[0]["input_ids"])  # 8
+            num_sent = len(features[0]["input_ids"])
             flat_features = []
             for feature in features:
                 for i in range(num_sent):

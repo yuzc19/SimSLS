@@ -3,7 +3,7 @@
 # In this example, we show how to train SimCSE using multiple GPU cards and PyTorch's distributed data parallel on supervised NLI dataset.
 # Set how many GPUs to use
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=4
 
 # 38599MiB / 4 hours
 NUM_GPU=1
@@ -25,7 +25,7 @@ python train.py \
     --output_dir result/lawformer \
     --num_train_epochs 2 \
     --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 8 \
+    --gradient_accumulation_steps 16 \
     --learning_rate 1e-5 \
     --max_seq_length 3072 \
     --evaluation_strategy steps \

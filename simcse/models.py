@@ -61,7 +61,7 @@ def cl_forward(
     return_dict = return_dict if return_dict is not None else cls.config.use_return_dict
     batch_size = input_ids.size(0)  # 1
     # Number of sentences in one instance
-    num_sent = input_ids.size(1)  # 8
+    num_sent = input_ids.size(1)
 
     # Flatten input for encoding
     input_ids = input_ids.view((-1, input_ids.size(-1)))  # (bs * num_sent, len)
@@ -93,8 +93,6 @@ def cl_forward(
         (batch_size, num_sent, pooler_output.size(-1))
     )  # (bs, num_sent, hidden)
 
-    # Gather all embeddings if using distributed training (ignored)
-
     # Separate representation
     z1, z2 = pooler_output[:, 0], pooler_output[:, 1]  # (bs, hidden)
     cos_sim = cls.sim(z1.unsqueeze(1), z2.unsqueeze(0))  # (bs, 1)
@@ -106,7 +104,6 @@ def cl_forward(
 
     loss_fct = nn.LogSoftmax(dim=-1)
     loss = -loss_fct(cos_sim)[0][0]
-    # print(loss)
 
     if not return_dict:
         output = (cos_sim,) + outputs[2:]

@@ -14,7 +14,7 @@ tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext")
 # model = AutoModel.from_pretrained(
 #     "thunlp/Lawformer"
 # ).cuda()  # zero-shot: 0.6135746125773133
-model_name_or_path = "result/lawformer-1-1e-5-0.1"
+model_name_or_path = "result/lawformer"
 model = LawformerForCL.from_pretrained(model_name_or_path).cuda()
 
 
@@ -92,5 +92,5 @@ if do_eval:
 else:
     json.dump(y_scores, open(os.path.join(model_name_or_path, "scores.json"), "w"))
 
-    # with open(model_name_or_path + "/prediction.json", "w") as f:
-    #     f.write(json.dumps(prediction))
+    with open(model_name_or_path + "/prediction.json", "w") as f:
+        f.write(json.dumps(prediction))
