@@ -1,3 +1,4 @@
+import argparse
 from transformers import AutoTokenizer, AutoModel
 from simcse.models import LawformerForCL
 import torch
@@ -8,13 +9,18 @@ from copy import deepcopy
 import os
 import numpy as np
 
-do_eval = True
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--do_eval", type=bool, default=False)
+
+args = parser.parse_args()
+do_eval = args.do_eval
 
 tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext")
 # model = AutoModel.from_pretrained(
 #     "thunlp/Lawformer"
 # ).cuda()  # zero-shot: 0.6135746125773133
-model_name_or_path = "result/lawformer"
+model_name_or_path = "result/lawformer-16-1e-5-0.15"
 model = LawformerForCL.from_pretrained(model_name_or_path).cuda()
 
 

@@ -26,7 +26,7 @@ python train.py \
     --num_train_epochs 2 \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 16 \
-    --learning_rate 1e-5 \
+    --learning_rate 5e-6 \
     --max_seq_length 3072 \
     --evaluation_strategy steps \
     --metric_for_best_model ndcg \
@@ -34,7 +34,7 @@ python train.py \
     --eval_steps 10 \
     --pooler_type cls \
     --overwrite_output_dir \
-    --temp 0.15 \
+    --temp 0.1 \
     --do_train \
     --do_eval \
     --fp16 \

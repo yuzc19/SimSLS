@@ -1,16 +1,22 @@
+import argparse
 import json
 import numpy as np
 from sklearn.metrics import ndcg_score
 import os
 
-do_eval = False
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--do_eval", type=bool, default=False)
+
+args = parser.parse_args()
+do_eval = args.do_eval
 
 index = 2
 
 model_name_or_paths = [
     "result/lawformer-1-1e-5-0.1",
     "result/lawformer-8-1e-5-0.1",
-    "result/lawformer",
+    "result/lawformer-16-1e-5-0.1",
 ]
 model_name_or_path = model_name_or_paths[index]
 

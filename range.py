@@ -5,27 +5,19 @@ import os
 
 do_eval = True
 
-index = 0
+index = 2
 
 model_name_or_paths = [
     "result/lawformer-1-1e-5-0.1",
     "result/lawformer-8-1e-5-0.1",
-    "result/lawformer",
+    "result/lawformer-16-1e-5-0.1",
 ]
 model_name_or_path = model_name_or_paths[index]
-
-BM25_ratios = [0.061, 0.319, 0.39]  # 0.219 for new
-BM25_ratio = BM25_ratios[index]
 
 if do_eval:
     with open("baseline/eval_scores.json") as f:
         BM25_scores = json.loads(f.read())
     with open(f"{model_name_or_path}/eval_scores.json") as f:
-        model_scores = json.loads(f.read())
-else:
-    with open("baseline/scores.json") as f:
-        BM25_scores = json.loads(f.read())
-    with open(f"{model_name_or_path}/scores.json") as f:
         model_scores = json.loads(f.read())
 
 if do_eval:

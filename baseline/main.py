@@ -8,8 +8,6 @@ import numpy as np
 from sklearn.metrics import ndcg_score
 from sklearn import preprocessing
 
-do_eval = False
-
 parser = argparse.ArgumentParser(description="Help info.")
 parser.add_argument(
     "--input", type=str, default="train", help="input path of the dataset directory."
@@ -17,9 +15,11 @@ parser.add_argument(
 parser.add_argument(
     "--output", type=str, default="baseline", help="output path of the prediction file."
 )
+parser.add_argument("--do_eval", type=bool, default=False)
 
 args = parser.parse_args()
 input_path = args.input
+do_eval = args.do_eval
 if do_eval:
     input_query_path = os.path.join(input_path, "eval.json")
 else:
