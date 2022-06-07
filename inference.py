@@ -20,7 +20,7 @@ tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext")
 # model = AutoModel.from_pretrained(
 #     "thunlp/Lawformer"
 # ).cuda()  # zero-shot: 0.6135746125773133
-model_name_or_path = "result/lawformer-16-1e-5-0.15"
+model_name_or_path = "result/lawformer-16-1e-5-0.1"
 model = LawformerForCL.from_pretrained(model_name_or_path).cuda()
 
 
